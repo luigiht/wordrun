@@ -1,8 +1,9 @@
 :root {
   --black: #000000;
   --white: #ffffff;
-  --blue: #0c62fb;
-  --blue-dark: #002faf;
+  /* Brand colour. Named semantically so a re-brand is a one-line change. */
+  --primary: #1e3a48;
+  --primary-dark: #152932;
   --grey: #666666;
   --line: #e6e6e6;
   --red: #e6154a;
@@ -21,24 +22,24 @@ body {
 }
 
 body {
-  font-family: var(--font-slalom-sans), 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: var(--blue);
+  color: var(--primary);
 }
 
 a:hover {
-  color: var(--blue-dark);
+  color: var(--primary-dark);
 }
 
 input:focus,
 button:focus {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--primary);
   outline-offset: 1px;
 }
 
 .leaflet-container {
-  font-family: var(--font-slalom-sans), Arial, sans-serif;
+  font-family: var(--font-inter), Arial, sans-serif;
 }

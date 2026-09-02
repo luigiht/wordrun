@@ -25,7 +25,7 @@
 }
 
 .brand {
-  color: var(--blue);
+  color: var(--primary);
 }
 
 .title {
@@ -103,29 +103,29 @@
   font-size: 14px;
   padding: 8px 14px;
   border: none;
-  background: var(--blue);
+  background: var(--primary);
   color: var(--white);
   white-space: nowrap;
 }
 
 .buttonPrimary:hover {
-  background: var(--blue-dark);
+  background: var(--primary-dark);
 }
 
 .buttonPick,
 .buttonPickActive {
   font-size: 14px;
   padding: 8px 14px;
-  border: 1.5px solid var(--blue);
+  border: 1.5px solid var(--primary);
 }
 
 .buttonPick {
   background: var(--white);
-  color: var(--blue);
+  color: var(--primary);
 }
 
 .buttonPickActive {
-  background: var(--blue);
+  background: var(--primary);
   color: var(--white);
 }
 
@@ -146,12 +146,12 @@
   font-size: 18px;
   padding: 14px;
   border: none;
-  background: var(--blue);
+  background: var(--primary);
   color: var(--white);
 }
 
 .buttonLarge:hover:not(:disabled) {
-  background: var(--blue-dark);
+  background: var(--primary-dark);
 }
 
 .buttonLarge:disabled {
@@ -172,7 +172,7 @@
 }
 
 .slider {
-  accent-color: var(--blue);
+  accent-color: var(--primary);
   width: 100%;
 }
 
@@ -256,7 +256,7 @@
 }
 
 .checkboxRow input {
-  accent-color: var(--blue);
+  accent-color: var(--primary);
   width: 16px;
   height: 16px;
 }

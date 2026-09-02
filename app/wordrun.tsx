@@ -222,7 +222,7 @@ export default function Wordrun() {
         }).addTo(group)
       }
     }
-    L.polyline(coords, { color: '#0C62FB', weight: 5, opacity: 0.95 }).addTo(group)
+    L.polyline(coords, { color: '#1E3A48', weight: 5, opacity: 0.95 }).addTo(group)
     L.circleMarker(coords[0] as LatLngTuple, {
       radius: 8,
       color: '#000000',
@@ -466,8 +466,8 @@ export default function Wordrun() {
         </div>
 
         <div className={styles.footnote}>
-          Routes snap to real streets via OpenStreetMap. Solid blue is your run; the dashed line is
-          the ideal letter shape.
+          Routes snap to real streets via OpenStreetMap. The solid line is your run; the dashed line
+          is the ideal letter shape.
         </div>
       </aside>
 

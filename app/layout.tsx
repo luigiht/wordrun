@@ -1,15 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import localFont from 'next/font/local'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
-const slalomSans = localFont({
-  src: [
-    { path: '../fonts/SlalomSans-Light.otf', weight: '300', style: 'normal' },
-    { path: '../fonts/SlalomSans-Regular.otf', weight: '400', style: 'normal' },
-    { path: '../fonts/SlalomSans-Bold.otf', weight: '700', style: 'normal' },
-    { path: '../fonts/SlalomSans-Black.otf', weight: '900', style: 'normal' },
-  ],
-  variable: '--font-slalom-sans',
+// Variable font — no `weight` list needed; the 300/400/700/900 the UI uses are all on the axis.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
   display: 'swap',
   fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
 })
@@ -23,12 +19,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0c62fb',
+  themeColor: '#1e3a48',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={slalomSans.variable}>
+    <html lang="en" className={inter.variable}>
       <body>{children}</body>
     </html>
   )
