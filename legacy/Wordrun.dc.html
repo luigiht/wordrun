@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@font-face { font-family: 'Slalom Sans'; src: url('fonts/SlalomSans-Light.otf'); font-weight: 300; }
+@font-face { font-family: 'Slalom Sans'; src: url('fonts/SlalomSans-Regular.otf'); font-weight: 400; }
+@font-face { font-family: 'Slalom Sans'; src: url('fonts/SlalomSans-Bold.otf'); font-weight: 700; }
+@font-face { font-family: 'Slalom Sans'; src: url('fonts/SlalomSans-Black.otf'); font-weight: 900; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body { font-family: 'Slalom Sans', 'Helvetica Neue', Arial, sans-serif; }
+a { color: #0C62FB; } a:hover { color: #002FAF; }
+input:focus, button:focus { outline: 2px solid #0C62FB; outline-offset: 1px; }
+.leaflet-container { font-family: 'Slalom Sans', Arial, sans-serif; }
+</style>
+</helmet>
+<div style="display: flex; height: 100vh; background: #FFFFFF; color: #000000; overflow: hidden">
+  <div style="width: 380px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px; padding: 32px 28px; border-right: 1px solid #E6E6E6; overflow-y: auto">
+    <div>
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #0C62FB">Wordrun</div>
+      <h1 style="font-size: 34px; font-weight: 700; line-height: 0.95; letter-spacing: -0.02em; margin: 10px 0 0">Run a word onto the map</h1>
+      <p style="font-size: 15px; font-weight: 300; line-height: 1.45; color: #666666; margin: 10px 0 0">Type a word, set a start point, and get a continuous street route that draws it.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="word" style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase">Your word</label>
+      <input id="word" value="{{ word }}" onChange="{{ setWord }}" maxLength="10" placeholder="RUN" spellCheck="false" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 28px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; padding: 12px 14px; border: 2px solid #000000; border-radius: 4px; background: #FFFFFF" />
+      <div style="font-size: 13px; font-weight: 300; color: #666666">Letters A–Z, up to 10.</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase">Start point</div>
+      <div style="display: flex; gap: 8px">
+        <input value="{{ address }}" onChange="{{ setAddress }}" onKeyDown="{{ addressKey }}" placeholder="Type an address or place" spellCheck="false" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 15px; font-weight: 400; padding: 10px 12px; border: 1.5px solid #000000; border-radius: 4px; background: #FFFFFF; flex: 1; min-width: 0" />
+        <button onClick="{{ searchAddress }}" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 14px; font-weight: 700; padding: 8px 14px; border: none; border-radius: 4px; background: #0C62FB; color: #FFFFFF; cursor: pointer; white-space: nowrap" style-hover="background: #002FAF">{{ searchLabel }}</button>
+      </div>
+      <div style="font-size: 13px; font-weight: 300; color: #666666">{{ startLabel }}</div>
+      <div style="display: flex; gap: 8px">
+        <button onClick="{{ togglePick }}" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 14px; font-weight: 700; padding: 8px 14px; border: 1.5px solid #0C62FB; border-radius: 4px; background: {{ pickBg }}; color: {{ pickFg }}; cursor: pointer">{{ pickLabel }}</button>
+        <sc-if value="{{ hasCustomStart }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ resetStart }}" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 14px; font-weight: 400; padding: 8px 14px; border: 1.5px solid #E6E6E6; border-radius: 4px; background: #FFFFFF; color: #000000; cursor: pointer">Reset</button>
+        </sc-if>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="size" style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase">Letter height — {{ sizeLabel }}</label>
+      <input id="size" type="range" min="200" max="900" step="50" value="{{ size }}" onChange="{{ setSize }}" style="accent-color: #0C62FB; width: 100%" />
+      <div style="font-size: 13px; font-weight: 300; color: #666666">Bigger letters, longer run — and easier to read.</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="detail" style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase">Drawing accuracy</label>
+      <input id="detail" type="range" min="60" max="190" step="10" value="{{ detail }}" onChange="{{ setDetail }}" style="accent-color: #0C62FB; width: 100%" />
+      <div style="font-size: 13px; font-weight: 300; color: #666666">Higher accuracy hugs the letter shapes more closely, with more turns.</div>
+    </div>
+    <button onClick="{{ generate }}" disabled="{{ loading }}" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 18px; font-weight: 700; padding: 14px; border: none; border-radius: 4px; background: #0C62FB; color: #FFFFFF; cursor: pointer" style-hover="background: #002FAF">{{ generateLabel }}</button>
+    <sc-if value="{{ error }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size: 15px; font-weight: 300; color: #E6154A">{{ error }}</div>
+    </sc-if>
+    <sc-if value="{{ hasRoute }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+          <div style="border: 1px solid #E6E6E6; border-radius: 12px; padding: 14px">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #666666">Distance</div>
+            <div style="font-size: 30px; font-weight: 900; letter-spacing: -0.01em; margin-top: 4px">{{ distanceText }}</div>
+          </div>
+          <div style="border: 1px solid #E6E6E6; border-radius: 12px; padding: 14px">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #666666">Est. time</div>
+            <div style="font-size: 30px; font-weight: 900; letter-spacing: -0.01em; margin-top: 4px">{{ timeText }}</div>
+          </div>
+        </div>
+        <div style="font-size: 13px; font-weight: 300; color: #666666">{{ paceNote }}</div>
+        <button onClick="{{ exportGpx }}" style="font-family: 'Slalom Sans', Arial, sans-serif; font-size: 16px; font-weight: 700; padding: 12px; border: 1.5px solid #000000; border-radius: 4px; background: #FFFFFF; color: #000000; cursor: pointer" style-hover="background: #E6E6E6">Export GPX</button>
+      </div>
+    </sc-if>
+    <div style="margin-top: auto; font-size: 13px; font-weight: 300; color: #666666; line-height: 1.4">Routes snap to real streets via OpenStreetMap. Solid blue is your run; the dashed line is the ideal letter shape.</div>
+  </div>
+  <div style="flex: 1; position: relative; min-width: 0">
+    <div ref="{{ mapRef }}" style="position: absolute; inset: 0"></div>
+    <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; background: #000000; color: #FFFFFF; font-size: 15px; font-weight: 400; padding: 8px 18px; border-radius: 48px">Snapping to streets…</div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;units&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;km&quot;, &quot;mi&quot;], &quot;default&quot;: &quot;km&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Run&quot;}, &quot;pace&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 6, &quot;min&quot;: 4, &quot;max&quot;: 9, &quot;step&quot;: 0.5, &quot;unit&quot;: &quot;min/km&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Run&quot;}, &quot;showIdeal&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Map&quot;}}">
+const FONT = {
+  A: [[[0,0],[2,6],[4,0]],[[1,2.6],[3,2.6]]],
+  B: [[[0,0],[0,6],[3,6],[3,3.2],[0,3.2],[3,3.2],[3.6,1.6],[3,0],[0,0]]],
+  C: [[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1]]],
+  D: [[[0,0],[0,6],[2.6,6],[4,4.4],[4,1.6],[2.6,0],[0,0]]],
+  E: [[[4,6],[0,6],[0,0],[4,0]],[[0,3],[3,3]]],
+  F: [[[0,0],[0,6],[4,6]],[[0,3],[3,3]]],
+  G: [[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1],[4,3],[2.2,3]]],
+  H: [[[0,0],[0,6]],[[0,3],[4,3]],[[4,6],[4,0]]],
+  I: [[[0,6],[0,0]]],
+  J: [[[3,6],[3,1],[2,0],[1,0],[0,1]]],
+  K: [[[0,0],[0,6]],[[4,6],[0,2.8],[4,0]]],
+  L: [[[0,6],[0,0],[4,0]]],
+  M: [[[0,0],[0,6],[2,2.6],[4,6],[4,0]]],
+  N: [[[0,0],[0,6],[4,0],[4,6]]],
+  O: [[[1,0],[0,1],[0,5],[1,6],[3,6],[4,5],[4,1],[3,0],[1,0]]],
+  P: [[[0,0],[0,6],[3,6],[4,4.8],[3.2,3.4],[0,3.4]]],
+  Q: [[[1,0],[0,1],[0,5],[1,6],[3,6],[4,5],[4,1],[3,0],[1,0]],[[2.6,1.4],[4.4,-0.4]]],
+  R: [[[0,0],[0,6],[3,6],[4,4.8],[3.2,3.4],[0,3.4]],[[1.4,3.4],[4,0]]],
+  S: [[[4,5.2],[3,6],[1,6],[0,5],[0.8,3.6],[3.2,2.4],[4,1],[3,0],[1,0],[0,0.8]]],
+  T: [[[0,6],[4,6]],[[2,6],[2,0]]],
+  U: [[[0,6],[0,1],[1,0],[3,0],[4,1],[4,6]]],
+  V: [[[0,6],[2,0],[4,6]]],
+  W: [[[0,6],[1,0],[2,4],[3,0],[4,6]]],
+  X: [[[0,6],[4,0]],[[0,0],[4,6]]],
+  Y: [[[0,6],[2,3],[4,6]],[[2,3],[2,0]]],
+  Z: [[[0,6],[4,6],[0,0],[4,0]]],
+  ' ': []
+};
+const WIDTHS = { I: 0, ' ': 2 };
+const CITIES = [
+  { name: 'London', label: 'Starts in Marylebone, London', lat: 51.517, lon: -0.158 },
+  { name: 'New York', label: 'Starts near Central Park, New York', lat: 40.775, lon: -73.968 },
+  { name: 'Paris', label: 'Starts near the Jardin du Luxembourg, Paris', lat: 48.845, lon: 2.34 },
+  { name: 'Berlin', label: 'Starts near Volkspark Friedrichshain, Berlin', lat: 52.527, lon: 13.436 },
+  { name: 'Tokyo', label: 'Starts near Yoyogi Park, Tokyo', lat: 35.669, lon: 139.7 }
+];
+class Component extends DCLogic {
+  state = { word: 'RUN', city: 0, size: 650, loading: false, error: null, route: null, ideal: null, distance: 0, start: null, picking: false, detail: 90, address: '', geocoding: false, startName: null };
+  mapRef = React.createRef();
+  ensureMap() {
+    if (!window.L || !this.mapRef.current) return false;
+    const el = this.mapRef.current;
+    if (this.map && this.L === window.L && this.map.getContainer() === el && document.body.contains(el)) return true;
+    if (this.map) { try { this.map.remove(); } catch (e) {} this.map = null; }
+    el.innerHTML = ''; el._leaflet_id = null;
+    this.L = window.L;
+    const c = CITIES[this.state.city];
+    this.map = L.map(el, { zoomControl: true, zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false }).setView([c.lat, c.lon], 14);
+    this.map.on('click', (ev) => {
+      if (!this.state.picking) return;
+      this.setState({ start: [ev.latlng.lat, ev.latlng.lng], startName: null, picking: false }, () => this.generate());
+    });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(this.map);
+    this.layerGroup = L.layerGroup().addTo(this.map);
+    requestAnimationFrame(() => this.map && this.map.invalidateSize());
+    return true;
+  }
+  componentDidMount() {
+    const tryInit = () => {
+      if (!this.ensureMap()) { setTimeout(tryInit, 150); return; }
+      this.ro = new ResizeObserver(() => this.map && this.map.invalidateSize());
+      this.ro.observe(this.mapRef.current);
+      setTimeout(() => this.generate(), 300);
+    };
+    tryInit();
+  }
+  componentDidUpdate() {
+    if (this.mapRef.current && this.map && this.map.getContainer() !== this.mapRef.current) {
+      this.ensureMap();
+      if (this.state.route) this.drawMap(this.state.route, this.state.ideal);
+    }
+  }
+  componentWillUnmount() { if (this.ro) this.ro.disconnect(); }
+  buildIdeal(word, origin, size) {
+    const city = { lat: origin[0], lon: origin[1] };
+    const scale = size / 6; // meters per font unit
+    const mLat = 1 / 111320, mLon = 1 / (111320 * Math.cos(city.lat * Math.PI / 180));
+    let cursor = 0; const strokes = [];
+    for (const ch of word) {
+      const glyph = FONT[ch] || [];
+      const w = WIDTHS[ch] !== undefined ? WIDTHS[ch] : 4;
+      for (const stroke of glyph) {
+        strokes.push(stroke.map(([x, y]) => [city.lat + y * scale * mLat, city.lon + (cursor + x) * scale * mLon]));
+      }
+      cursor += w + 1.6;
+    }
+    return strokes;
+  }
+  densify(strokes, spacingM) {
+    const pts = [];
+    const dist = (a, b) => {
+      const dLat = (b[0] - a[0]) * 111320;
+      const dLon = (b[1] - a[1]) * 111320 * Math.cos(a[0] * Math.PI / 180);
+      return Math.hypot(dLat, dLon);
+    };
+    for (const stroke of strokes) {
+      for (let i = 0; i < stroke.length; i++) {
+        if (i === 0) { pts.push(stroke[i]); continue; }
+        const a = stroke[i - 1], b = stroke[i], d = dist(a, b), n = Math.max(1, Math.round(d / spacingM));
+        for (let k = 1; k <= n; k++) pts.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
+      }
+    }
+    return pts;
+  }
+  async generate() {
+    try { await this._generate(); }
+    catch (e) { console.error('generate failed', e); this.setState({ loading: false, error: 'Something went wrong: ' + e.message }); }
+  }
+  async _generate() {
+    const word = (this.state.word || 'RUN').toUpperCase().replace(/[^A-Z ]/g, '') || 'RUN';
+    const city = CITIES[this.state.city];
+    const origin = this.state.start || [city.lat, city.lon];
+    const strokes = this.buildIdeal(word, origin, this.state.size);
+    if (!strokes.length) { this.setState({ error: 'Type at least one letter.' }); return; }
+    this.setState({ loading: true, error: null });
+    let spacing = this.state.detail;
+    let waypoints = this.densify(strokes, spacing);
+    while (waypoints.length > 180) { spacing *= 1.3; waypoints = this.densify(strokes, spacing); }
+    let coords = null, distance = 0, snapped = true;
+    try {
+      const locs = waypoints.map(p => p[1].toFixed(6) + ',' + p[0].toFixed(6)).join(';');
+      const url = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/' + locs + '?overview=full&geometries=geojson&continue_straight=false';
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.code !== 'Ok') throw new Error(data.message || data.code);
+      const route = data.routes[0];
+      coords = route.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+      distance = route.distance;
+    } catch (e) {
+      snapped = false;
+      coords = waypoints;
+      for (let i = 1; i < coords.length; i++) {
+        const dLat = (coords[i][0] - coords[i-1][0]) * 111320;
+        const dLon = (coords[i][1] - coords[i-1][1]) * 111320 * Math.cos(coords[i][0] * Math.PI / 180);
+        distance += Math.hypot(dLat, dLon);
+      }
+    }
+    this.setState({ loading: false, route: coords, ideal: strokes, distance, error: snapped ? null : 'Street routing unavailable right now — showing the ideal line instead.' });
+    try { this.drawMap(coords, strokes); }
+    catch (e) { console.error('drawMap failed: ' + (e && e.stack)); }
+  }
+  drawMap(coords, strokes) {
+    if (!this.ensureMap()) { setTimeout(() => this.drawMap(coords, strokes), 300); return; }
+    this.map.invalidateSize();
+    this.layerGroup.clearLayers();
+    coords = coords.filter(p => p && isFinite(p[0]) && isFinite(p[1]));
+    strokes = (strokes || []).map(s => s.filter(p => p && isFinite(p[0]) && isFinite(p[1]))).filter(s => s.length > 1);
+    if (!coords.length) return;
+    let s = 90, n = -90, w = 180, e = -180;
+    for (const p of coords) { s = Math.min(s, p[0]); n = Math.max(n, p[0]); w = Math.min(w, p[1]); e = Math.max(e, p[1]); }
+    const padLat = (n - s) * 0.15 || 0.002, padLon = (e - w) * 0.15 || 0.002;
+    this.map.fitBounds([[s - padLat, w - padLon], [n + padLat, e + padLon]], { animate: false });
+    const showIdeal = this.props.showIdeal ?? true;
+    if (showIdeal) for (const s of strokes) L.polyline(s, { color: '#000000', weight: 2, opacity: 0.45, dashArray: '6 8' }).addTo(this.layerGroup);
+    L.polyline(coords, { color: '#0C62FB', weight: 5, opacity: 0.95 }).addTo(this.layerGroup);
+    L.circleMarker(coords[0], { radius: 8, color: '#000000', weight: 2, fillColor: '#DEFF4D', fillOpacity: 1 }).addTo(this.layerGroup).bindTooltip('Start');
+    L.circleMarker(coords[coords.length - 1], { radius: 6, color: '#000000', weight: 2, fillColor: '#FFFFFF', fillOpacity: 1 }).addTo(this.layerGroup).bindTooltip('Finish');
+  }
+  async searchAddress() {
+    const q = (this.state.address || '').trim();
+    if (!q || this.state.geocoding) return;
+    this.setState({ geocoding: true, error: null });
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q));
+      const data = await res.json();
+      if (!data.length) { this.setState({ geocoding: false, error: 'No match for that address — try adding a city or country.' }); return; }
+      const hit = data[0];
+      this.setState({ geocoding: false, start: [+hit.lat, +hit.lon], startName: hit.display_name.split(',').slice(0, 2).join(','), picking: false }, () => {
+        if (this.map) this.map.setView([+hit.lat, +hit.lon], 14, { animate: false });
+        this.generate();
+      });
+    } catch (e) {
+      this.setState({ geocoding: false, error: 'Address lookup failed — try again or pick on the map.' });
+    }
+  }
+  exportGpx() {
+    const coords = this.state.route; if (!coords) return;
+    const pts = coords.map(p => '    <trkpt lat="' + p[0].toFixed(6) + '" lon="' + p[1].toFixed(6) + '"></trkpt>').join('\n');
+    const gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Wordrun" xmlns="http://www.topografix.com/GPX/1/1">\n  <trk><name>Wordrun \u2014 ' + this.state.word.toUpperCase() + '</name><trkseg>\n' + pts + '\n  </trkseg></trk>\n</gpx>';
+    const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'wordrun-' + this.state.word.toLowerCase().replace(/\s+/g, '-') + '.gpx';
+    a.click(); URL.revokeObjectURL(a.href);
+  }
+  renderVals() {
+    const s = this.state;
+    const units = this.props.units ?? 'km';
+    const pace = this.props.pace ?? 6;
+    const km = s.distance / 1000;
+    const distVal = units === 'mi' ? km * 0.621371 : km;
+    const mins = Math.round(distVal * (units === 'mi' ? pace * 1.60934 : pace));
+    return {
+      word: s.word,
+      setWord: (e) => this.setState({ word: e.target.value.toUpperCase().replace(/[^A-Z ]/g, '') }),
+      startLabel: s.start ? 'Start: ' + (s.startName || s.start[0].toFixed(4) + ', ' + s.start[1].toFixed(4)) : 'Type an address, or pick a point on the map.',
+      address: s.address,
+      setAddress: (e) => this.setState({ address: e.target.value }),
+      addressKey: (e) => { if (e.key === 'Enter') this.searchAddress(); },
+      searchAddress: () => this.searchAddress(),
+      searchLabel: s.geocoding ? 'Finding\u2026' : 'Set start',
+      picking: s.picking,
+      pickLabel: s.picking ? 'Click the map to set your start\u2026' : (s.start ? 'Move start point' : 'Pick start on map'),
+      togglePick: () => this.setState({ picking: !s.picking }),
+      pickBg: s.picking ? '#0C62FB' : '#FFFFFF',
+      pickFg: s.picking ? '#FFFFFF' : '#0C62FB',
+      hasCustomStart: !!s.start,
+      resetStart: () => this.setState({ start: null, startName: null, address: '', picking: false }, () => this.generate()),
+      size: s.size,
+      sizeLabel: s.size + ' m',
+      setSize: (e) => this.setState({ size: +e.target.value }),
+      detail: 250 - s.detail,
+      setDetail: (e) => this.setState({ detail: 250 - +e.target.value }),
+      generate: () => this.generate(),
+      generateLabel: s.loading ? 'Routing\u2026' : 'Generate route',
+      loading: s.loading,
+      error: s.error,
+      hasRoute: !!s.route,
+      distanceText: distVal.toFixed(1) + ' ' + units,
+      timeText: Math.floor(mins / 60) > 0 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' min',
+      paceNote: 'At ' + pace + ':00 min/' + units + ' pace, including connector segments between letters.',
+      exportGpx: () => this.exportGpx(),
+      mapRef: this.mapRef
+    };
+  }
+}
+</script>
+</body>
+</html>

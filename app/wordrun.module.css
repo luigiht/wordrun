@@ -1,0 +1,321 @@
+.shell {
+  display: flex;
+  height: 100vh;
+  background: var(--white);
+  color: var(--black);
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 380px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px 28px;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.brand {
+  color: var(--blue);
+}
+
+.title {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin: 10px 0 0;
+}
+
+.lede {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--grey);
+  margin: 10px 0 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.hint {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--grey);
+}
+
+.wordInput {
+  font: inherit;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  border: 2px solid var(--black);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--black);
+}
+
+.textInput {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--black);
+  flex: 1;
+  min-width: 0;
+}
+
+.buttonPrimary,
+.buttonPick,
+.buttonPickActive,
+.buttonGhost,
+.buttonOutline,
+.buttonLarge {
+  font: inherit;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.buttonPrimary {
+  font-size: 14px;
+  padding: 8px 14px;
+  border: none;
+  background: var(--blue);
+  color: var(--white);
+  white-space: nowrap;
+}
+
+.buttonPrimary:hover {
+  background: var(--blue-dark);
+}
+
+.buttonPick,
+.buttonPickActive {
+  font-size: 14px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--blue);
+}
+
+.buttonPick {
+  background: var(--white);
+  color: var(--blue);
+}
+
+.buttonPickActive {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.buttonGhost {
+  font-size: 14px;
+  font-weight: 400;
+  padding: 8px 14px;
+  border: 1.5px solid var(--line);
+  background: var(--white);
+  color: var(--black);
+}
+
+.buttonGhost:hover {
+  background: var(--line);
+}
+
+.buttonLarge {
+  font-size: 18px;
+  padding: 14px;
+  border: none;
+  background: var(--blue);
+  color: var(--white);
+}
+
+.buttonLarge:hover:not(:disabled) {
+  background: var(--blue-dark);
+}
+
+.buttonLarge:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.buttonOutline {
+  font-size: 16px;
+  padding: 12px;
+  border: 1.5px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+}
+
+.buttonOutline:hover {
+  background: var(--line);
+}
+
+.slider {
+  accent-color: var(--blue);
+  width: 100%;
+}
+
+.error {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--red);
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.statLabel {
+  color: var(--grey);
+}
+
+.statValue {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  margin-top: 4px;
+}
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1.5px solid var(--black);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segment,
+.segmentActive {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 7px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.segment {
+  background: var(--white);
+  color: var(--black);
+}
+
+.segment:hover {
+  background: var(--line);
+}
+
+.segmentActive {
+  background: var(--black);
+  color: var(--white);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--grey);
+  cursor: pointer;
+}
+
+.checkboxRow input {
+  accent-color: var(--blue);
+  width: 16px;
+  height: 16px;
+}
+
+.footnote {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--grey);
+  line-height: 1.4;
+}
+
+.mapWrap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+.toast {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: var(--black);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 400;
+  padding: 8px 18px;
+  border-radius: 48px;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .sidebar {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    overflow-y: visible;
+  }
+
+  .footnote {
+    margin-top: 8px;
+  }
+
+  .mapWrap {
+    flex: none;
+    height: 70vh;
+    min-height: 380px;
+  }
+}

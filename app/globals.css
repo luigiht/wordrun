@@ -1,0 +1,44 @@
+:root {
+  --black: #000000;
+  --white: #ffffff;
+  --blue: #0c62fb;
+  --blue-dark: #002faf;
+  --grey: #666666;
+  --line: #e6e6e6;
+  --red: #e6154a;
+  --lime: #deff4d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-slalom-sans), 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--blue);
+}
+
+a:hover {
+  color: var(--blue-dark);
+}
+
+input:focus,
+button:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.leaflet-container {
+  font-family: var(--font-slalom-sans), Arial, sans-serif;
+}
