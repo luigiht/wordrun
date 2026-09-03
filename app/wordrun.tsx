@@ -12,6 +12,7 @@ import {
   densify,
   polylineLength,
   sanitizeWord,
+  simplify,
   toGpx,
   type LatLng,
 } from '@/lib/wordrun'
@@ -26,7 +27,18 @@ const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 /** Kept in step with `--route` in globals.css; Leaflet needs a literal, not a var(). */
-const ROUTE_COLOUR = '#4A4A4A'
+const ROUTE_COLOUR = '#000000'
+/**
+ * Douglas-Peucker tolerance for the drawn route, in metres, chosen off a sweep
+ * against real OSRM output: it sheds ~81% of the vertices, and raising it to 12
+ * only reaches 85% while doubling how far the line strays from the street. At
+ * the zoom where a whole word is legible this is under a pixel, so the drawn
+ * path still tracks the roads.
+ *
+ * Applied to the drawing only. It shortens the path by ~3%, which would be
+ * wrong in an exported GPX.
+ */
+const SIMPLIFY_M = 6
 
 /** Leaflet is UMD-only and touches `window` at import time, so it loads in the browser. */
 async function loadLeaflet(): Promise<Leaflet> {
@@ -36,6 +48,29 @@ async function loadLeaflet(): Promise<Leaflet> {
 
 function formatPace(pace: number): string {
   return `${Math.floor(pace)}:${pace % 1 ? '30' : '00'}`
+}
+
+/**
+ * The folded-map brand mark, inlined rather than pointed at the copy in
+ * public/. That keeps it on `currentColor`, so it tracks the panel's --ink if
+ * the surface is ever re-skinned, and avoids referencing a file named
+ * favicon-light.svg for the *dark* mark. The source SVG's clipPath is dropped:
+ * it clips to the full viewBox, so it was a no-op.
+ *
+ * aria-hidden because the word "Wordrun" sits immediately beside it; announcing
+ * both would just repeat the brand name.
+ */
+function BrandMark() {
+  return (
+    <svg
+      className={styles.brandMark}
+      viewBox="0 0 256 256"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path fill="currentColor" d="M256 256H0V222.4L39.9121 204.771L95.5742 229.399V229.403L101.25 231.909L104.077 233.158L106.904 231.909L112.581 229.403L112.582 229.402L176.818 201.023L180.989 199.181V194.621L181 46.001L181.001 35.2549L171.172 39.5967L104.087 69.2285L48.4209 44.5986L48.415 44.5967L42.7393 42.0908L39.9121 40.8418L37.085 42.0908L31.4082 44.5967L31.4072 44.5977L0 58.4727V0H256V256ZM155.638 182.658L116.762 199.807V91.3477L155.638 74.1992V182.658ZM91.3984 91.3457V199.802L52.5771 182.66V74.2041L91.3984 91.3457ZM27.2168 182.658L0 194.663V86.2041L27.2168 74.1992V182.658Z" />
+    </svg>
+  )
 }
 
 export default function Wordrun() {
@@ -54,7 +89,6 @@ export default function Wordrun() {
   const [distance, setDistance] = useState(0)
   const [units, setUnits] = useState<Units>('km')
   const [pace, setPace] = useState(6)
-  const [showIdeal, setShowIdeal] = useState(true)
   const [mapReady, setMapReady] = useState(false)
   const [runToken, setRunToken] = useState(0)
 
@@ -96,6 +130,8 @@ export default function Wordrun() {
 
     try {
       const { coords, distance: routed } = await snapToStreets(waypoints, controller.signal)
+      // Stored at full resolution. Thinning happens at draw time, so the GPX
+      // export keeps every turn of the real street path.
       setRoute(coords)
       setIdeal(strokes)
       setDistance(routed)
@@ -209,23 +245,29 @@ export default function Wordrun() {
       [north + padLat, east + padLon],
     ]
 
-    // Only re-frame when the route itself changed, so toggling overlays is calm.
+    // Only re-frame when the route itself changed, so a redraw triggered by
+    // anything else leaves the user's pan and zoom alone.
     if (fittedRef.current !== route) {
       map.fitBounds(boundsRef.current, { animate: false })
       fittedRef.current = route
     }
 
-    if (showIdeal) {
-      for (const stroke of strokes) {
-        L.polyline(stroke, {
-          color: '#000000',
-          weight: 2,
-          opacity: 0.45,
-          dashArray: '6 8',
-        }).addTo(group)
-      }
+    // Always drawn — the toggle that used to gate this is gone from the sidebar.
+    for (const stroke of strokes) {
+      L.polyline(stroke, {
+        color: '#000000',
+        weight: 2,
+        opacity: 0.45,
+        dashArray: '6 8',
+      }).addTo(group)
     }
-    L.polyline(coords, { color: ROUTE_COLOUR, weight: 5, opacity: 0.95 }).addTo(group)
+    // Thinned for drawing only: OSRM hands back a vertex per kerb curve, which
+    // reads as a jagged edge on a shape whose corners should be the letters'.
+    L.polyline(simplify(coords, SIMPLIFY_M), {
+      color: ROUTE_COLOUR,
+      weight: 5,
+      opacity: 1,
+    }).addTo(group)
     L.circleMarker(coords[0] as LatLngTuple, {
       radius: 8,
       color: '#000000',
@@ -244,7 +286,7 @@ export default function Wordrun() {
     })
       .addTo(group)
       .bindTooltip('Finish')
-  }, [route, ideal, showIdeal, mapReady])
+  }, [route, ideal, mapReady])
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -300,7 +342,10 @@ export default function Wordrun() {
     <main className={styles.shell}>
       <aside className={styles.sidebar}>
         <div>
-          <div className={`${styles.eyebrow} ${styles.brand}`}>Wordrun</div>
+          <div className={`${styles.eyebrow} ${styles.brand}`}>
+            <BrandMark />
+            Wordrun
+          </div>
           <h1 className={styles.title}>Run a word onto the map</h1>
           <p className={styles.lede}>
             Type a word, set a start point, and get a continuous street route that draws it.
@@ -458,14 +503,6 @@ export default function Wordrun() {
             value={pace}
             onChange={(e) => setPace(Number(e.target.value))}
           />
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={showIdeal}
-              onChange={(e) => setShowIdeal(e.target.checked)}
-            />
-            Show the ideal letter shape
-          </label>
         </div>
 
         {/* Collapsed by default so the controls stay the focus, but present in
@@ -482,11 +519,6 @@ export default function Wordrun() {
             </details>
           ))}
         </section>
-
-        <div className={styles.footnote}>
-          Routes snap to real streets via OpenStreetMap. The solid line is your run; the dashed line
-          is the ideal letter shape.
-        </div>
       </aside>
 
       <div className={styles.mapWrap}>

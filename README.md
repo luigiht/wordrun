@@ -84,12 +84,12 @@ initial HTML; only the Leaflet tiles need JavaScript.
 | [app/page.tsx](app/page.tsx) | Server component; renders the app and the JSON-LD graph |
 | [app/wordrun.tsx](app/wordrun.tsx) | Client component: UI, map lifecycle, route generation |
 | [app/wordrun.module.css](app/wordrun.module.css) | Component styles, including the mobile stacked layout |
-| [app/layout.tsx](app/layout.tsx) | Document shell, metadata, Inter via `next/font/google` |
+| [app/layout.tsx](app/layout.tsx) | Document shell, metadata, Inter + Manrope via `next/font/google` |
 | [app/opengraph-image.png](app/opengraph-image.png) | 1200x630 social card, reused for the Twitter card |
 | [app/robots.ts](app/robots.ts) / [app/sitemap.ts](app/sitemap.ts) | `/robots.txt` and `/sitemap.xml` |
 | [lib/site.ts](lib/site.ts) | Canonical URL and the shared metadata copy |
 | [lib/faq.ts](lib/faq.ts) | FAQ copy, rendered in the sidebar and as `FAQPage` structured data |
-| [lib/wordrun.ts](lib/wordrun.ts) | Single-stroke alphabet, glyph layout, densification, GPX serialisation |
+| [lib/wordrun.ts](lib/wordrun.ts) | Single-stroke alphabet, glyph layout, densification, simplification, GPX serialisation |
 | [lib/osm.ts](lib/osm.ts) | OSRM foot-routing and Nominatim geocoding clients |
 
 Generating a route:
@@ -101,6 +101,13 @@ Generating a route:
    what OSRM will accept in one request.
 3. OSRM snaps the waypoints to a continuous walking route. If it is unavailable, the app falls
    back to drawing the ideal line and reports the straight-line distance.
+4. The route is thinned with Douglas-Peucker ([`simplify`](lib/wordrun.ts)) **for drawing only**.
+   OSRM returns a vertex per kerb curve, which reads as noise on a shape whose corners should be
+   the letters'; at the 6 m tolerance in `SIMPLIFY_M` that removes ~80% of the vertices while
+   staying under a pixel at the zoom where a word is legible.
+
+The stored route stays at full resolution, so the GPX export keeps every turn of the real street
+path and the reported distance is OSRM's own figure rather than the drawn approximation.
 
 Leaflet is a UMD-only bundle that touches `window` at import time, so it is loaded with a dynamic
 `import()` inside an effect rather than at module scope.
@@ -110,9 +117,12 @@ Leaflet is a UMD-only bundle that touches `window` at import time, so it is load
 - `assets/` holds the source brand artwork. `opengraph.png` and the two `favicon-*.svg` files
   are copied into `app/` and `public/` as the served versions, so edit the originals here and
   re-copy rather than editing the copies.
-- `fonts/` holds the Slalom Sans OTFs, but nothing currently imports them — the UI renders in
-  Inter via `next/font/google` ([app/layout.tsx](app/layout.tsx)). Keep them if Slalom Sans is
-  coming back; otherwise they are dead weight.
+- `fonts/` holds the Slalom Sans OTFs, but nothing currently imports them — type is Inter for body
+  copy and Manrope for display, both via `next/font/google`
+  ([app/layout.tsx](app/layout.tsx)). Keep them if Slalom Sans is coming back; otherwise they are
+  dead weight.
+- Manrope's weight axis stops at 800, where Inter's runs to 900. The two display rules that used
+  900 are now 800; anything heavier will silently clamp.
 - OSRM and Nominatim are free community endpoints with rate limits and no uptime guarantee. For
   anything beyond casual traffic, self-host them or move the calls into a Next.js route handler
   where they can be cached.

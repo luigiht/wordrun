@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Manrope } from 'next/font/google'
+import { Inter, Manrope } from 'next/font/google'
 import './globals.css'
 import {
   ORG_NAME,
@@ -11,12 +11,18 @@ import {
   SITE_URL,
 } from '@/lib/site'
 
-// Variable font, so no `weight` list is needed. Manrope's wght axis is 200-800,
-// which covers the 300/400/700/800 the UI uses. Named --font-sans rather than
-// --font-manrope so swapping the family again stays a one-line change here.
-const sans = Manrope({
+// Body copy in Inter (which has a 100-900 weight axis), display faces in Manrope
+// (wght 200-800). Both variable so no weight lists are needed.
+const body = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-body',
+  display: 'swap',
+  fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
+})
+
+const display = Manrope({
+  subsets: ['latin'],
+  variable: '--font-display',
   display: 'swap',
   fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
 })
@@ -91,7 +97,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={sans.variable}>
+    <html lang="en" className={`${body.variable} ${display.variable}`}>
       <head>
         {/* Hand-written rather than via `metadata.icons`, which cannot express a
             media query. Dark ink on light chrome and vice versa; app/favicon.ico

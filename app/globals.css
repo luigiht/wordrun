@@ -17,7 +17,7 @@
 
   /* Map layer colours are passed to Leaflet as literals in wordrun.tsx; these
      record the same values so the palette stays documented in one place. */
-  --route: #4a4a4a;
+  --route: #000000;
   --lime: #deff4d;
 }
 
@@ -33,7 +33,7 @@ body {
 }
 
 body {
-  font-family: var(--font-sans), 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-body), 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -54,5 +54,5 @@ button:focus {
 }
 
 .leaflet-container {
-  font-family: var(--font-sans), Arial, sans-serif;
+  font-family: var(--font-body), Arial, sans-serif;
 }

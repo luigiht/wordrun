@@ -69,6 +69,82 @@ export function polylineLength(points: LatLng[]): number {
   return total
 }
 
+/**
+ * Ramer-Douglas-Peucker. `toleranceM` is the furthest a dropped point may sit
+ * from the line drawn in its place.
+ *
+ * OSRM returns street geometry at full resolution, so every kerb curve and
+ * slight bend arrives as its own vertex. On a shape whose only meaningful
+ * corners belong to the letters, those read as noise. They deviate by a few
+ * metres, while a letter corner deviates by tens, so a tolerance between the
+ * two drops the noise and leaves the writing intact.
+ *
+ * Note this thins vertices; it cannot remove a staircase where the route
+ * genuinely zig-zags up a street grid to approximate a diagonal stroke, since
+ * those steps are real turns of the same magnitude as the letter's own.
+ */
+export function simplify(points: LatLng[], toleranceM: number): LatLng[] {
+  if (points.length < 3) return points.slice()
+
+  // Project to local metres once, so the perpendicular test is plain geometry
+  // rather than repeated great-circle work.
+  const [lat0, lon0] = points[0]
+  const kLon = METERS_PER_DEGREE_LAT * Math.cos((lat0 * Math.PI) / 180)
+  const xs = points.map((p) => (p[1] - lon0) * kLon)
+  const ys = points.map((p) => (p[0] - lat0) * METERS_PER_DEGREE_LAT)
+
+  const keep = new Uint8Array(points.length)
+  keep[0] = 1
+  keep[points.length - 1] = 1
+
+  // Explicit stack: recursing would nest once per kept vertex, and a long route
+  // holds thousands.
+  const stack: [number, number][] = [[0, points.length - 1]]
+  const tolerance2 = toleranceM * toleranceM
+
+  while (stack.length) {
+    const [first, last] = stack.pop() as [number, number]
+    if (last - first < 2) continue
+
+    const ax = xs[first]
+    const ay = ys[first]
+    const dx = xs[last] - ax
+    const dy = ys[last] - ay
+    const span2 = dx * dx + dy * dy
+
+    let worst2 = -1
+    let worstAt = -1
+    for (let i = first + 1; i < last; i++) {
+      const px = xs[i] - ax
+      const py = ys[i] - ay
+      let d2: number
+      if (span2 === 0) {
+        // Degenerate segment: the route left and returned to the same point,
+        // which happens on out-and-back spurs.
+        d2 = px * px + py * py
+      } else {
+        // Clamped to the segment, not the infinite line through it — otherwise
+        // points beyond an endpoint measure as closer than they are.
+        const t = Math.max(0, Math.min(1, (px * dx + py * dy) / span2))
+        const ex = px - t * dx
+        const ey = py - t * dy
+        d2 = ex * ex + ey * ey
+      }
+      if (d2 > worst2) {
+        worst2 = d2
+        worstAt = i
+      }
+    }
+
+    if (worst2 > tolerance2) {
+      keep[worstAt] = 1
+      stack.push([first, worstAt], [worstAt, last])
+    }
+  }
+
+  return points.filter((_, i) => keep[i] === 1)
+}
+
 /** Lay the word out as geographic strokes, with `origin` as the baseline start. */
 export function buildIdeal(word: string, origin: LatLng, letterHeightM: number): LatLng[][] {
   const [lat, lon] = origin
