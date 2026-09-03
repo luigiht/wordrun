@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LatLngBoundsLiteral, LatLngTuple, LayerGroup, Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import styles from './wordrun.module.css'
-import { FAQS } from '@/lib/faq'
+import { FAQS, type Faq } from '@/lib/faq'
 import { geocode, snapToStreets } from '@/lib/osm'
 import {
   CITIES,
@@ -48,6 +48,25 @@ async function loadLeaflet(): Promise<Leaflet> {
 
 function formatPace(pace: number): string {
   return `${Math.floor(pace)}:${pace % 1 ? '30' : '00'}`
+}
+
+/**
+ * Splits an answer around its `email`, if it declares one, so the address is a
+ * mailto link on screen while `faq.answer` stays the plain string the JSON-LD
+ * needs. Falls back to the raw text if the address is not found, so a typo in
+ * one field can never blank the answer.
+ */
+function renderAnswer(faq: Faq): React.ReactNode {
+  if (!faq.email) return faq.answer
+  const [before, ...rest] = faq.answer.split(faq.email)
+  if (!rest.length) return faq.answer
+  return (
+    <>
+      {before}
+      <a href={`mailto:${faq.email}`}>{faq.email}</a>
+      {rest.join(faq.email)}
+    </>
+  )
 }
 
 /**
@@ -515,7 +534,7 @@ export default function Wordrun() {
           {FAQS.map((faq) => (
             <details key={faq.question} className={styles.faq}>
               <summary className={styles.faqQuestion}>{faq.question}</summary>
-              <p className={styles.faqAnswer}>{faq.answer}</p>
+              <p className={styles.faqAnswer}>{renderAnswer(faq)}</p>
             </details>
           ))}
         </section>

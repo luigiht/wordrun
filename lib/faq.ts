@@ -7,7 +7,12 @@
  * component: importing the site config there would pull `process.env` reads
  * that only resolve on the server into the browser bundle.
  */
-export type Faq = { question: string; answer: string }
+/**
+ * `answer` stays plain text because it is what goes into the JSON-LD verbatim.
+ * Where an answer names an address, `email` repeats it so the sidebar can wrap
+ * that substring in a mailto link without HTML entering the data.
+ */
+export type Faq = { question: string; answer: string; email?: string }
 
 export const FAQS: Faq[] = [
   {
@@ -39,5 +44,11 @@ export const FAQS: Faq[] = [
     question: 'Is Wordrun free?',
     answer:
       'Yes. Wordrun is free, needs no account, and runs entirely in your browser on open data from OpenStreetMap.',
+  },
+  {
+    question: 'How can I send feedback?',
+    answer:
+      'Email it straight to luis@luigiht.com. Bug reports, words that route badly in your city, and suggestions for what to build next are all welcome.',
+    email: 'luis@luigiht.com',
   },
 ]
