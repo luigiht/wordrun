@@ -1,12 +1,23 @@
 :root {
-  --black: #000000;
-  --white: #ffffff;
-  /* Brand colour. Named semantically so a re-brand is a one-line change. */
-  --primary: #1e3a48;
-  --primary-dark: #152932;
-  --grey: #666666;
-  --line: #e6e6e6;
-  --red: #e6154a;
+  /*
+   * Surface tokens, named for their role rather than their colour, so a surface
+   * can be re-skinned by re-pointing this set on a container instead of writing
+   * a parallel set of rules. #121212 is the primary colour and #f4f4f4 the text
+   * that sits on it, matching the favicons and the social card in assets/.
+   */
+  --surface: #ffffff;
+  --ink: #121212;
+  --ink-muted: #666666;
+  --edge: #121212; /* heavy strokes: hero input, segmented control */
+  --line: #e6e6e6; /* hairlines: dividers, stat cards, and hover washes */
+  --fill: #121212; /* primary action fill, focus ring, native control accent */
+  --fill-ink: #f4f4f4; /* text on --fill */
+  --fill-hover: #000000;
+  --danger: #e6154a;
+
+  /* Map layer colours are passed to Leaflet as literals in wordrun.tsx; these
+     record the same values so the palette stays documented in one place. */
+  --route: #4a4a4a;
   --lime: #deff4d;
 }
 
@@ -22,24 +33,26 @@ body {
 }
 
 body {
-  font-family: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-sans), 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: var(--primary);
+  color: var(--ink);
 }
 
 a:hover {
-  color: var(--primary-dark);
+  color: var(--fill-hover);
 }
 
+/* --fill rather than a literal, so the ring follows the surface if one is ever
+   re-skinned. */
 input:focus,
 button:focus {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--fill);
   outline-offset: 1px;
 }
 
 .leaflet-container {
-  font-family: var(--font-inter), Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }

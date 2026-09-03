@@ -1,15 +1,23 @@
 import type { MetadataRoute } from 'next'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from '@/lib/site'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Wordrun — run a word onto the map',
-    short_name: 'Wordrun',
-    description:
-      'Type a word, set a start point, and get a continuous street route that draws it. Export as GPX.',
+    // Stable `id` so an installed copy survives a change of start_url.
+    id: '/',
+    name: SITE_TITLE,
+    short_name: SITE_NAME,
+    description: SITE_DESCRIPTION,
     start_url: '/',
+    scope: '/',
     display: 'standalone',
+    orientation: 'any',
+    lang: 'en',
+    dir: 'ltr',
+    categories: ['health', 'fitness', 'sports', 'navigation'],
+    // Light splash to match the app; dark chrome from the brand primary.
     background_color: '#ffffff',
-    theme_color: '#1e3a48',
+    theme_color: '#121212',
     icons: [
       // No `maskable` purpose: the wordmark bleeds to the edges, so Android's
       // safe-zone crop would clip the leading W and trailing N.

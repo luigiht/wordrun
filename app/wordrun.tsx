@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LatLngBoundsLiteral, LatLngTuple, LayerGroup, Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import styles from './wordrun.module.css'
+import { FAQS } from '@/lib/faq'
 import { geocode, snapToStreets } from '@/lib/osm'
 import {
   CITIES,
@@ -24,6 +25,8 @@ const HOME = CITIES[0]
 const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+/** Kept in step with `--route` in globals.css; Leaflet needs a literal, not a var(). */
+const ROUTE_COLOUR = '#4A4A4A'
 
 /** Leaflet is UMD-only and touches `window` at import time, so it loads in the browser. */
 async function loadLeaflet(): Promise<Leaflet> {
@@ -222,7 +225,7 @@ export default function Wordrun() {
         }).addTo(group)
       }
     }
-    L.polyline(coords, { color: '#1E3A48', weight: 5, opacity: 0.95 }).addTo(group)
+    L.polyline(coords, { color: ROUTE_COLOUR, weight: 5, opacity: 0.95 }).addTo(group)
     L.circleMarker(coords[0] as LatLngTuple, {
       radius: 8,
       color: '#000000',
@@ -294,7 +297,7 @@ export default function Wordrun() {
     minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes} min`
 
   return (
-    <div className={styles.shell}>
+    <main className={styles.shell}>
       <aside className={styles.sidebar}>
         <div>
           <div className={`${styles.eyebrow} ${styles.brand}`}>Wordrun</div>
@@ -465,6 +468,21 @@ export default function Wordrun() {
           </label>
         </div>
 
+        {/* Collapsed by default so the controls stay the focus, but present in
+            the server-rendered HTML — this is the page's indexable prose and
+            the visible half of the FAQPage structured data in page.tsx. */}
+        <section className={styles.about} aria-labelledby="about-heading">
+          <h2 id="about-heading" className={styles.aboutHeading}>
+            About Wordrun
+          </h2>
+          {FAQS.map((faq) => (
+            <details key={faq.question} className={styles.faq}>
+              <summary className={styles.faqQuestion}>{faq.question}</summary>
+              <p className={styles.faqAnswer}>{faq.answer}</p>
+            </details>
+          ))}
+        </section>
+
         <div className={styles.footnote}>
           Routes snap to real streets via OpenStreetMap. The solid line is your run; the dashed line
           is the ideal letter shape.
@@ -472,9 +490,14 @@ export default function Wordrun() {
       </aside>
 
       <div className={styles.mapWrap}>
-        <div ref={containerRef} className={styles.map} />
+        <div
+          ref={containerRef}
+          className={styles.map}
+          role="region"
+          aria-label="Map showing your word drawn as a street route"
+        />
         {loading && <div className={styles.toast}>Snapping to streets…</div>}
       </div>
-    </div>
+    </main>
   )
 }

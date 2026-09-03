@@ -35,14 +35,60 @@ Or push the repo to GitHub/GitLab/Bitbucket and import it at
 [vercel.com/new](https://vercel.com/new) — Vercel auto-detects Next.js and needs no build
 settings changes.
 
+## SEO
+
+Everything crawlers read is derived from [lib/site.ts](lib/site.ts), so the canonical URL, the
+Open Graph tags, the sitemap and the JSON-LD cannot drift apart.
+
+The one thing worth setting is the canonical origin, which is resolved in this order:
+
+1. `NEXT_PUBLIC_SITE_URL` — set this in the Vercel project once a custom domain is attached.
+2. `VERCEL_PROJECT_PRODUCTION_URL` — injected by Vercel into every environment, so preview
+   builds canonicalise to production rather than to a throwaway deployment URL.
+3. `http://localhost:3000`, for `next dev`.
+
+Two gotchas, both verified against a production build:
+
+- **The variable has to be present at runtime, not just at build.** `next start` re-resolves
+  metadata per request, so a build that baked the right origin still serves `localhost`
+  canonicals if the serving process lacks the variable. Vercel exposes project variables to both
+  phases, so this only bites self-hosted deployments. Emitting `localhost` canonicals stops the
+  page being indexed at all.
+- A cached `.next` can serve a stale origin after the variable changes; `rm -rf .next` before
+  rebuilding.
+
+What ships:
+
+- `/robots.txt` and `/sitemap.xml` from [app/robots.ts](app/robots.ts) and
+  [app/sitemap.ts](app/sitemap.ts).
+- Canonical link, Open Graph and `summary_large_image` Twitter tags, and `max-image-preview:large`
+  so results can carry a full-size thumbnail.
+- A `WebSite` + `Organization` + `WebApplication` + `FAQPage` JSON-LD graph, wired by `@id`.
+- The 1200x630 card at [app/opengraph-image.png](app/opengraph-image.png). Next.js fills in
+  `og:image` and `twitter:image` from that one file, with the alt text taken from
+  `app/opengraph-image.alt.txt`.
+- Colour-scheme-aware SVG favicons from `public/`, declared in
+  [app/layout.tsx](app/layout.tsx) because `metadata.icons` cannot express a `media` query.
+  `app/favicon.ico` remains the fallback for clients that ignore SVG icons.
+- The FAQ prose in [lib/faq.ts](lib/faq.ts), server-rendered into the sidebar. Google only
+  credits structured data a visitor can actually read, so the copy and the `FAQPage` markup are
+  generated from that one list.
+
+Both the sidebar and the map are server-rendered, so the headline, controls and FAQ are in the
+initial HTML; only the Leaflet tiles need JavaScript.
+
 ## How it works
 
 | File | Role |
 | --- | --- |
-| [app/page.tsx](app/page.tsx) | Server component; renders the app |
+| [app/page.tsx](app/page.tsx) | Server component; renders the app and the JSON-LD graph |
 | [app/wordrun.tsx](app/wordrun.tsx) | Client component: UI, map lifecycle, route generation |
 | [app/wordrun.module.css](app/wordrun.module.css) | Component styles, including the mobile stacked layout |
-| [app/layout.tsx](app/layout.tsx) | Document shell, metadata, self-hosted Slalom Sans via `next/font/local` |
+| [app/layout.tsx](app/layout.tsx) | Document shell, metadata, Inter via `next/font/google` |
+| [app/opengraph-image.png](app/opengraph-image.png) | 1200x630 social card, reused for the Twitter card |
+| [app/robots.ts](app/robots.ts) / [app/sitemap.ts](app/sitemap.ts) | `/robots.txt` and `/sitemap.xml` |
+| [lib/site.ts](lib/site.ts) | Canonical URL and the shared metadata copy |
+| [lib/faq.ts](lib/faq.ts) | FAQ copy, rendered in the sidebar and as `FAQPage` structured data |
 | [lib/wordrun.ts](lib/wordrun.ts) | Single-stroke alphabet, glyph layout, densification, GPX serialisation |
 | [lib/osm.ts](lib/osm.ts) | OSRM foot-routing and Nominatim geocoding clients |
 
@@ -61,8 +107,12 @@ Leaflet is a UMD-only bundle that touches `window` at import time, so it is load
 
 ## Notes
 
-- `fonts/` holds the Slalom Sans OTFs consumed by `next/font/local`. They are not in `public/`
-  because `next/font` fingerprints and serves them itself.
+- `assets/` holds the source brand artwork. `opengraph.png` and the two `favicon-*.svg` files
+  are copied into `app/` and `public/` as the served versions, so edit the originals here and
+  re-copy rather than editing the copies.
+- `fonts/` holds the Slalom Sans OTFs, but nothing currently imports them — the UI renders in
+  Inter via `next/font/google` ([app/layout.tsx](app/layout.tsx)). Keep them if Slalom Sans is
+  coming back; otherwise they are dead weight.
 - OSRM and Nominatim are free community endpoints with rate limits and no uptime guarantee. For
   anything beyond casual traffic, self-host them or move the calls into a Next.js route handler
   where they can be cached.

@@ -1,8 +1,8 @@
 .shell {
   display: flex;
   height: 100vh;
-  background: var(--white);
-  color: var(--black);
+  background: var(--surface);
+  color: var(--ink);
   overflow: hidden;
 }
 
@@ -13,6 +13,8 @@
   flex-direction: column;
   gap: 24px;
   padding: 32px 28px;
+  background: var(--surface);
+  color: var(--ink);
   border-right: 1px solid var(--line);
   overflow-y: auto;
 }
@@ -25,7 +27,7 @@
 }
 
 .brand {
-  color: var(--primary);
+  color: var(--ink);
 }
 
 .title {
@@ -40,7 +42,7 @@
   font-size: 15px;
   font-weight: 300;
   line-height: 1.45;
-  color: var(--grey);
+  color: var(--ink-muted);
   margin: 10px 0 0;
 }
 
@@ -58,20 +60,20 @@
 .hint {
   font-size: 13px;
   font-weight: 300;
-  color: var(--grey);
+  color: var(--ink-muted);
 }
 
 .wordInput {
   font: inherit;
   font-size: 28px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 12px 14px;
-  border: 2px solid var(--black);
+  border: 2px solid var(--edge);
   border-radius: 4px;
-  background: var(--white);
-  color: var(--black);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .textInput {
@@ -79,12 +81,19 @@
   font-size: 15px;
   font-weight: 400;
   padding: 10px 12px;
-  border: 1.5px solid var(--black);
+  border: 1.5px solid var(--edge);
   border-radius: 4px;
-  background: var(--white);
-  color: var(--black);
+  background: var(--surface);
+  color: var(--ink);
   flex: 1;
   min-width: 0;
+}
+
+/* Set explicitly so placeholders match the hint text under each field rather
+   than whatever grey the UA picks. */
+.wordInput::placeholder,
+.textInput::placeholder {
+  color: var(--ink-muted);
 }
 
 .buttonPrimary,
@@ -103,30 +112,30 @@
   font-size: 14px;
   padding: 8px 14px;
   border: none;
-  background: var(--primary);
-  color: var(--white);
+  background: var(--fill);
+  color: var(--fill-ink);
   white-space: nowrap;
 }
 
 .buttonPrimary:hover {
-  background: var(--primary-dark);
+  background: var(--fill-hover);
 }
 
 .buttonPick,
 .buttonPickActive {
   font-size: 14px;
   padding: 8px 14px;
-  border: 1.5px solid var(--primary);
+  border: 1.5px solid var(--fill);
 }
 
 .buttonPick {
-  background: var(--white);
-  color: var(--primary);
+  background: transparent;
+  color: var(--ink);
 }
 
 .buttonPickActive {
-  background: var(--primary);
-  color: var(--white);
+  background: var(--fill);
+  color: var(--fill-ink);
 }
 
 .buttonGhost {
@@ -134,10 +143,12 @@
   font-weight: 400;
   padding: 8px 14px;
   border: 1.5px solid var(--line);
-  background: var(--white);
-  color: var(--black);
+  background: transparent;
+  color: var(--ink);
 }
 
+/* --line doubles as the hover wash, so it stays in step with the button's own
+   border colour. */
 .buttonGhost:hover {
   background: var(--line);
 }
@@ -146,12 +157,12 @@
   font-size: 18px;
   padding: 14px;
   border: none;
-  background: var(--primary);
-  color: var(--white);
+  background: var(--fill);
+  color: var(--fill-ink);
 }
 
 .buttonLarge:hover:not(:disabled) {
-  background: var(--primary-dark);
+  background: var(--fill-hover);
 }
 
 .buttonLarge:disabled {
@@ -162,9 +173,9 @@
 .buttonOutline {
   font-size: 16px;
   padding: 12px;
-  border: 1.5px solid var(--black);
-  background: var(--white);
-  color: var(--black);
+  border: 1.5px solid var(--edge);
+  background: transparent;
+  color: var(--ink);
 }
 
 .buttonOutline:hover {
@@ -172,14 +183,14 @@
 }
 
 .slider {
-  accent-color: var(--primary);
+  accent-color: var(--fill);
   width: 100%;
 }
 
 .error {
   font-size: 15px;
   font-weight: 300;
-  color: var(--red);
+  color: var(--danger);
 }
 
 .results {
@@ -201,12 +212,12 @@
 }
 
 .statLabel {
-  color: var(--grey);
+  color: var(--ink-muted);
 }
 
 .statValue {
   font-size: 30px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.01em;
   margin-top: 4px;
 }
@@ -214,7 +225,7 @@
 .segmented {
   display: inline-flex;
   align-self: flex-start;
-  border: 1.5px solid var(--black);
+  border: 1.5px solid var(--edge);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -232,8 +243,8 @@
 }
 
 .segment {
-  background: var(--white);
-  color: var(--black);
+  background: transparent;
+  color: var(--ink);
 }
 
 .segment:hover {
@@ -241,8 +252,8 @@
 }
 
 .segmentActive {
-  background: var(--black);
-  color: var(--white);
+  background: var(--fill);
+  color: var(--fill-ink);
 }
 
 .checkboxRow {
@@ -251,21 +262,90 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 300;
-  color: var(--grey);
+  color: var(--ink-muted);
   cursor: pointer;
 }
 
 .checkboxRow input {
-  accent-color: var(--primary);
+  accent-color: var(--fill);
   width: 16px;
   height: 16px;
+}
+
+.about {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+
+.aboutHeading {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 4px;
+}
+
+.faq {
+  border-bottom: 1px solid var(--line);
+}
+
+.faqQuestion {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  padding: 10px 0;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron drawn in CSS so the summary marker matches the flat brand styling. */
+.faqQuestion::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  border-right: 1.5px solid var(--ink-muted);
+  border-bottom: 1.5px solid var(--ink-muted);
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+
+.faq[open] > .faqQuestion::before {
+  transform: rotate(45deg);
+}
+
+/* Hover strengthens the marker rather than the label: the label already sits at
+   full --ink, so a colour change there would be invisible. */
+.faqQuestion:hover::before {
+  border-right-color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.faqAnswer {
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  margin: 0 0 12px;
+  padding-left: 14px;
 }
 
 .footnote {
   margin-top: auto;
   font-size: 13px;
   font-weight: 300;
-  color: var(--grey);
+  color: var(--ink-muted);
   line-height: 1.4;
 }
 
@@ -286,8 +366,8 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  background: var(--black);
-  color: var(--white);
+  background: var(--ink);
+  color: var(--surface);
   font-size: 15px;
   font-weight: 400;
   padding: 8px 18px;
